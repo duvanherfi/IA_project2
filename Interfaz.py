@@ -1,7 +1,7 @@
 import pygame
 import numpy as np
-from busqueda import Busqueda
 import random
+import sys
 
 
 class Cursor(pygame.Rect):
@@ -34,8 +34,35 @@ class Button(pygame.sprite.Sprite):
         else:
             self.rect.left, self.rect.top = (-100, -100)
 
+class Fuente:
+    BLANCO = (255, 255, 255)
+    VERDE = (3, 175, 80)
+    ROJO = (255, 0, 0)
+    AMARILLO = (231, 242, 0)
 
-class Interfaz:
+    def __init__(self, fuente, size, texto, coor):
+        self.fuente = fuente
+        self.size = size
+        self.font = pygame.font.SysFont(fuente, size)
+        self.texto = texto
+        self.coor = coor
+        self.rect = pygame.Rect(coor[0], coor[1], len(texto) * 10, (len(texto) / 3) * 10)
+
+    def set_size(self, size):
+        self.font = pygame.font.SysFont(self.fuente, size)
+
+    def underline(self, bool):
+        self.font.set_underline(bool)
+
+    def render(self, antialias= 0, cursor=None):
+        color = self.VERDE
+        if not cursor is None:
+            if cursor.colliderect(self.rect):
+                color = self.AMARILLO
+        return self.font.render(self.texto, antialias, color)
+
+
+class Ventana:
     # Definimos algunos colores
     NEGRO = (0, 0, 0)
     BLANCO = (255, 255, 255)
@@ -45,16 +72,32 @@ class Interfaz:
     CAFE = (172, 76, 13)
     ROSADO = (249, 128, 186)
 
-    def __init__(self, grid=[], pasos=[], paso_actual=0, largo=50, alto=50, margen=5):
+    def __init__(self, largo=800, alto=600):
         # Inicializamos pygame
         pygame.init()
         # variables
         self.salir = False
+        # Establecemos el LARGO y ALTO de la pantalla
+        flags = pygame.RESIZABLE# | pygame.SCALED
+        self.dimension_ventana = [largo , alto]
+        self.pantalla = pygame.display.set_mode(self.dimension_ventana, flags)
+        # Establecemos el título de la pantalla.
+        pygame.display.set_caption("Proyecto 2 IA")
+        # Lo usamos para establecer cuán rápido de refresca la pantalla.
+        self.reloj = pygame.time.Clock()
+        # cursor
+        self.cursor = Cursor()
+
+class Tablero(Ventana):
+
+    def __init__(self, grid=[], pasos=[], paso_actual=0, nivel=1, largo=50, alto=50, margen=5):
+        #grid
         self.grid = pasos[paso_actual] if len(pasos) > 0 else grid
         self.grid_inicial = self.grid
         self.pasos = pasos
-        self.paso_actual = paso_actual
-        # Establecemos el LARGO y ALTO de cada celda de la retícula.
+        #nivel
+        self.nivel = nivel
+        #largo y alto
         self.largo = largo
         self.alto = alto
         # Establecemos el margen entre las celdas.
@@ -62,58 +105,19 @@ class Interfaz:
         alto_m = len(self.grid)
         largo_m = len(self.grid[0])
         margen_total = ((self.margen * 10) + 5)
-        # Establecemos el LARGO y ALTO de la pantalla
-        flags = pygame.RESIZABLE# | pygame.SCALED
-        self.dimension_ventana = [largo_m * margen_total, alto_m * margen_total]
-        self.pantalla = pygame.display.set_mode(self.dimension_ventana, flags)
-        # Establecemos el título de la pantalla.
-        pygame.display.set_caption("Proyecto 2 IA")
-        # Lo usamos para establecer cuán rápido de refresca la pantalla.
-        self.reloj = pygame.time.Clock()
-        # Se usa para saber que botones se muestran
-        self.estado_interfaz = 0
-        # Texto informes
-        self.fuente = pygame.font.SysFont("Gabriola", 27)
-        # Inicializamos imagenes
+        ##inicializamos pygame
+        super().__init__(largo_m * margen_total, alto_m * margen_total)
+        self.paso_actual = paso_actual
         self.caballo = None
         self.bonus = None
         self.inicializar_imagenes()
-        # cursor
-        self.cursor = Cursor()
-        # Botones
-        self.inicializar_botones()
-        # utils
-        # self.busqueda = Busqueda(self.grid_inicial)
-        self.mostrar = False
+
 
     def inicializar_imagenes(self):
         self.caballo = pygame.image.load("img/caballo.png").convert()
         self.caballo.set_colorkey(self.NEGRO)
         self.bonus = pygame.image.load("img/bonus.png").convert()
         self.bonus.set_colorkey(self.NEGRO)
-
-    def inicializar_botones(self):
-        pass
-        # Botones
-        # self.atras = Button(self.img_atras, self.img_atras_2,
-        #                     self.dimension_ventana[0] - 200, (self.dimension_ventana[1]/2) - 50)
-        # pos_y_img = (self.margen * 10) * ((len(self.grid) / 2) - 1)
-        # self.busqueda_no_inf = Button(
-        #     self.img_busq_no_inf, self.img_busq_no_inf_2, 0, pos_y_img)
-        # self.busqueda_inf = Button(
-        #     self.img_busq_inf, self.img_busq_inf_2, 0, pos_y_img + 80)
-        # # --------------------------------------------
-        # self.avara = Button(self.img_avara, self.img_avara_2, 0, pos_y_img)
-        # self.a_estrella = Button(
-        #     self.img_a_est, self.img_a_est_2, 0, pos_y_img + 80)
-        # # --------------------------------------------
-        # pos_y_img = (self.margen * 10) * (len(self.grid) / 3)
-        # self.amplitud = Button(
-        #     self.img_amplitud, self.img_amplitud_2, 0, pos_y_img)
-        # self.costo = Button(
-        #     self.img_costo_u, self.img_costo_u_2, 0, pos_y_img + 80)
-        # self.profundidad = Button(
-        #     self.img_profundidad, self.img_profundidad_2, 0, pos_y_img + 160)
 
     def set_pos_ant(self):
         pos_ant = list(map(lambda x: x[0], np.where(self.grid == 2)))
@@ -128,17 +132,6 @@ class Interfaz:
             self.paso_actual = len(self.pasos) - 1
         else:
             self.paso_actual = op
-
-    def post_search(self, info, tiempo):
-        self.pasos = info['pasos']
-        self.busqueda.reset_result()
-        self.pasos.reverse()
-        self.mostrar = True
-
-        self.grid = self.pasos[0]
-        self.resultados[0] = f"{round(tiempo, 3)}Seg"
-        self.resultados[1] = info['profundidad']
-        self.resultados[2] = info['cant_nodos_expandidos']
 
     def loop_events(self):
         for evento in pygame.event.get():
@@ -207,12 +200,7 @@ class Interfaz:
         while not self.salir:
             self.loop_events()
 
-            if self.mostrar:
-                self.update_pos_pasos(1)
-                self.reloj.tick(4)
-            else:
-                # Limitamos a 60 fotogramas por segundo.
-                self.reloj.tick(60)
+            self.reloj.tick(60)
 
             # Establecemos el fondo de pantalla.
             self.pantalla.fill(self.NEGRO)
@@ -229,32 +217,116 @@ class Interfaz:
 
         # Pórtate bien con el IDLE.
         pygame.quit()
+        Menu().show_window()
 
     def show_window(self):
         self.main_loop()
 
+class Menu(Ventana):
 
-grid = np.zeros([8, 8], dtype=int)
-_range = range(0, 8)
-caballo1 = np.array(random.sample(_range, 2))
-caballo2 = np.empty([1])
-while True:
-    caballo2 = np.array(random.sample(_range, 2))
-    if np.array_equal(caballo1, caballo2) is False:
-        break
+    def __init__(self, largo=600, alto=400):
+        #largo y alto
+        self.largo = largo
+        self.alto = alto
+        ##inicializamos pygame
+        super().__init__(largo, alto)
 
-bono = []
-bono2 = []
-bono3 = []
-while True:
-    bono = np.array(random.sample(_range, 2))
-    bono2 = np.array(random.sample(_range, 2))
-    bono3 = np.array(random.sample(_range, 2))
+        x = (self.dimension_ventana[0]/2)
+        y = 20
+        self.titulo = Fuente('Gabriola', 50, "War Horses", (x - 7 * 10, y))
+        self.principiante = Fuente('Gabriola', 34, "principiante", (x - 5.5 * 10, y + 100))
+        self.amateur = Fuente('Gabriola', 34, "amateur", (x - 3.5 * 10, y + 170))
+        self.experto = Fuente('Gabriola', 34, "experto", (x - 3.5 * 10, y + 240))
 
-    if sum(np.absolute(bono - bono2)) > 1 and sum(np.absolute(bono2 - bono3)) > 1:
-        break
-chars = [[caballo1, 1], [caballo2,2], [bono,3], [bono2,3], [bono3,3]]
-for char in chars:
-    grid[char[0][0]][char[0][1]] = char[1]
-print(grid)
-Interfaz(grid=grid).show_window()
+    def iniciar_nivel(self, nivel):
+        grid = np.zeros([8, 8], dtype=int)
+        _range = range(0, 8)
+        caballo1 = np.array(random.sample(_range, 2))
+        caballo2 = np.empty([1])
+        while True:
+            caballo2 = np.array(random.sample(_range, 2))
+            if np.array_equal(caballo1, caballo2) is False:
+                break
+
+        bono = []
+        bono2 = []
+        bono3 = []
+        while True:
+            bono = np.array(random.sample(_range, 2))
+            bono2 = np.array(random.sample(_range, 2))
+            bono3 = np.array(random.sample(_range, 2))
+
+            if sum(np.absolute(bono - bono2)) > 1 and sum(np.absolute(bono2 - bono3)) > 1 and \
+                    np.array_equal(bono, caballo1) is False and \
+                    np.array_equal(bono, caballo2) is False and \
+                    np.array_equal(bono2, caballo1) is False and \
+                    np.array_equal(bono2, caballo2) is False and \
+                    np.array_equal(bono3, caballo1) is False and \
+                    np.array_equal(bono3, caballo2) is False:
+                break
+        chars = [[caballo1, 1], [caballo2, 2], [bono, 3], [bono2, 3], [bono3, 3]]
+        for char in chars:
+            grid[char[0][0]][char[0][1]] = char[1]
+        print(grid)
+
+        Tablero(grid=grid, nivel=nivel).show_window()
+
+    def loop_events(self):
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                sys.exit(0)
+            if evento.type == pygame.MOUSEBUTTONDOWN:
+                if evento.button == 1:
+                    if self.cursor.colliderect(self.principiante.rect):
+                        self.iniciar_nivel(1)
+                        self.salir = True
+                    if self.cursor.colliderect(self.amateur.rect):
+                        self.iniciar_nivel(2)
+                        self.salir = True
+                    if self.cursor.colliderect(self.experto.rect):
+                        self.iniciar_nivel(3)
+                        self.salir = True
+
+    def main_loop(self):
+        # -------- Bucle Principal del Programa-----------
+        while not self.salir:
+            self.loop_events()
+
+            self.reloj.tick(60)
+
+            # Establecemos el fondo de pantalla.
+            self.pantalla.fill(self.NEGRO)
+
+            self.pantalla.blit(
+                self.titulo.render(),
+                self.titulo.coor
+            )
+
+            self.pantalla.blit(
+                self.principiante.render(cursor=self.cursor),
+                self.principiante.coor
+            )
+
+            self.pantalla.blit(
+                self.amateur.render(cursor=self.cursor),
+                self.amateur.coor
+            )
+
+            self.pantalla.blit(
+                self.experto.render(cursor=self.cursor),
+                self.experto.coor
+            )
+
+            # actualizar rectangulo de cursor
+            self.cursor.updatecursor()
+
+            # Avanzamos y actualizamos la pantalla con lo que hemos dibujado.
+            pygame.display.flip()
+
+        # Pórtate bien con el IDLE.
+        pygame.quit()
+
+    def show_window(self):
+        self.main_loop()
+
+Menu().show_window()
