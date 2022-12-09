@@ -180,6 +180,10 @@ class Tablero(Ventana):
                     color = self.ROJO
                 if self.grid[fila][columna] == 2:
                     color = self.VERDE
+                if self.grid[fila][columna] == 4:
+                    color = self.ROJO
+                if self.grid[fila][columna] == 5:
+                    color = self.VERDE
 
                 pygame.draw.rect(self.pantalla,
                                  color,
