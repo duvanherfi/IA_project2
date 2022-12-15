@@ -2,6 +2,9 @@ import pygame
 import numpy as np
 import random
 import sys
+from Juego import Juego
+from Nodo import Nodo
+
 
 
 class Cursor(pygame.Rect):
@@ -177,13 +180,13 @@ class Tablero(Ventana):
             for columna in range(len(self.grid[0])):
                 color = self.BLANCO
                 if self.grid[fila][columna] == 1:
-                    color = self.ROJO
+                    color = self.VERDE
                 if self.grid[fila][columna] == 2:
-                    color = self.VERDE
-                if self.grid[fila][columna] == 4:
                     color = self.ROJO
-                if self.grid[fila][columna] == 5:
+                if self.grid[fila][columna] == 4:
                     color = self.VERDE
+                if self.grid[fila][columna] == 5:
+                    color = self.ROJO
 
                 pygame.draw.rect(self.pantalla,
                                  color,
@@ -333,4 +336,11 @@ class Menu(Ventana):
     def show_window(self):
         self.main_loop()
 
-Menu().show_window()
+# Menu().show_window()
+
+#---------------------------------------------
+grid = np.loadtxt('entorno.txt', dtype=int)
+nodo = Nodo(grid,1)
+jugadas=Juego().crearArbol(nodo,4,0,[nodo])
+jugada=Juego().minimax(jugadas)
+Tablero(grid=jugada.entorno).show_window()
