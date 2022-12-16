@@ -274,7 +274,7 @@ class Menu(Ventana):
         chars = [[caballo1, 1], [caballo2, 2], [bono, 3], [bono2, 3], [bono3, 3]]
         for char in chars:
             grid[char[0][0]][char[0][1]] = char[1]
-        print(grid)
+        
 
         Tablero(grid=grid, nivel=nivel).show_window()
 
@@ -341,6 +341,6 @@ class Menu(Ventana):
 #---------------------------------------------
 grid = np.loadtxt('entorno.txt', dtype=int)
 nodo = Nodo(grid,1)
-jugadas=Juego().crearArbol(nodo,4,0,[nodo])
+jugadas=Juego().crearArbol(nodo,3,0,[nodo])
 jugada=Juego().minimax(jugadas)
 Tablero(grid=jugada.entorno).show_window()

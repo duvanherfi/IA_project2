@@ -97,10 +97,9 @@ class Nodo:
         if (self.profundidadAcumulada() == limit):
             for i in range(len(self.entorno)):
                 for j in range(len(self.entorno[i])):
-                    print(self.entorno[i][j])
-                    if (self.entorno[i][j] == 5):
+                    if (self.entorno[i][j] == 4):
                         utilidad_max +=1
-                    if (self.entorno[i][j]==4):
+                    if (self.entorno[i][j]==5):
                         utilidad_min +=1
             if (self.tipo == 1):
                 self.utilidad=utilidad_max
@@ -117,3 +116,25 @@ class Nodo:
             return self.profundidad
         else:
             return self.profundidad + self.padre.profundidadAcumulada()
+
+    def aplicarBono(self,pos,_color):
+        colorear_izq = pos[1]-1
+        colorear_der = pos[1]+1
+        colorear_arr = pos[0]-1
+        colorear_aba = pos[0]+1
+        #Validar izquierda
+        if colorear_izq >= 0:
+            if self.entorno[pos[0]][colorear_izq] == 0:
+               self.entorno[pos[0]][colorear_izq]=_color
+        #Validar derecha
+        if colorear_der <= len(self.entorno[0])-1:
+             if self.entorno[pos[0]][colorear_der] == 0:
+                self.entorno[pos[0]][colorear_der]=_color
+        #Validar arriba
+        if colorear_arr >= 0:
+            if self.entorno[colorear_arr][pos[1]] == 0:
+               self.entorno[colorear_arr][pos[1]]=_color
+        #Validar abajo
+        if colorear_aba <= len(self.entorno) - 1:
+            if self.entorno[colorear_aba][pos[1]] ==0:
+               self.entorno[colorear_aba][pos[1]]=_color
