@@ -344,7 +344,7 @@ class Menu(Ventana):
         for char in chars:
             grid[char[0][0]][char[0][1]] = char[1]
 
-        grid = np.loadtxt('entorno.txt', dtype=int)
+        #grid = np.loadtxt('entorno.txt', dtype=int)
         Tablero(grid=grid, nivel=nivel).show_window()
 
     def loop_events(self):
