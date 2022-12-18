@@ -259,8 +259,8 @@ class Tablero(Ventana):
         print(f"jugadas 1: {len(self.jugadas_1)}  and jugadas 2: {len(self.jugadas_2)}")
         if len(self.jugadas_1) == 1 and len(self.jugadas_2) == 1:
             print(self.grid)
-            jugadas_j = np.count_nonzero(np.array(self.grid) == 4)
-            jugadas_m = np.count_nonzero(np.array(self.grid) == 5)
+            jugadas_j = np.count_nonzero(np.array(self.grid) == 4) + 1
+            jugadas_m = np.count_nonzero(np.array(self.grid) == 5) + 1
             print(f"Jugadas maquina: {jugadas_m}")
             print(f"Jugadas jugador: {jugadas_j}")
             gandor = ""
@@ -344,7 +344,7 @@ class Menu(Ventana):
         for char in chars:
             grid[char[0][0]][char[0][1]] = char[1]
 
-
+        grid = np.loadtxt('entorno.txt', dtype=int)
         Tablero(grid=grid, nivel=nivel).show_window()
 
     def loop_events(self):
