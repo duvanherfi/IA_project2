@@ -31,6 +31,7 @@ class Juego:
     else:
         _tipo = 1
         _color = 4
+
     if (nodo.profundidadAcumulada() >= limit_profundidad):
         return movimientos
     else:
@@ -113,5 +114,7 @@ class Juego:
                     hijo.aplicarBono(upleft,_color)
                 hijo.setUtilidad(limit_profundidad)
                 movimientos.append(hijo)
+        if index + 1 >= len(movimientos):
+            return movimientos
                 
         return self.crearArbol(movimientos[index+1],limit_profundidad,index+1,movimientos)

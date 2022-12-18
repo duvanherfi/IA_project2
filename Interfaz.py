@@ -4,6 +4,7 @@ import random
 import sys
 from Juego import Juego
 from Nodo import Nodo
+import time
 
 
 
@@ -92,7 +93,7 @@ class Ventana:
         self.cursor = Cursor()
 
 class Tablero(Ventana):
-
+    DIFICULTAD = [2, 4, 6]
     def __init__(self, grid=[], pasos=[], paso_actual=0, nivel=1, largo=50, alto=50, margen=5):
         #grid
         self.grid = pasos[paso_actual] if len(pasos) > 0 else grid
@@ -101,7 +102,7 @@ class Tablero(Ventana):
         #nivel
         self.nivel = nivel
         #largo y alto
-        self.largo = largo
+        self.ancho = largo
         self.alto = alto
         # Establecemos el margen entre las celdas.
         self.margen = margen
@@ -114,6 +115,12 @@ class Tablero(Ventana):
         self.caballo = None
         self.bonus = None
         self.inicializar_imagenes()
+        self.turno = 1
+        self.profundidad = self.DIFICULTAD[self.nivel]
+        self.time_init = time.time()
+        self.jugadas_1 = []
+        self.jugadas_2 = []
+        self.pos_ant = 0
 
 
     def inicializar_imagenes(self):
@@ -136,19 +143,31 @@ class Tablero(Ventana):
         else:
             self.paso_actual = op
 
+    def pos_mouse(self):
+        pos = pygame.mouse.get_pos()
+        return (
+            pos[1] // (self.ancho + self.margen),
+            pos[0] // (self.alto + self.margen)
+        )
+
     def loop_events(self):
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 self.salir = True
             if evento.type == pygame.MOUSEBUTTONDOWN:
-                if evento.button == 1:
-                    pass
-                    # if self.cursor.colliderect(self.atras):
-                    #     self.estado_interfaz = 0
-                    #     self.pasos = []
-                    #     self.grid = self.grid_inicial
-                    #     self.resultados = ["", "", ""]
-                    #     self.busqueda.reset_result()
+                if evento.button == 1: #and self.turno == 2:
+                    mov = list(filter(lambda x: (x[self.pos_mouse()] == 1), self.jugadas_2))
+                    if len(mov) > 0:
+                        print("Turno 2")
+                        print(f"pos mouse: {self.pos_mouse()}")
+                        self.grid = mov[0]
+                        self.grid_inicial = self.grid
+                        print(self.grid)
+                        self.pasos.append(self.grid)
+                        self.paso_actual = len(self.pasos) - 1
+                        self.turno = 1
+                        self.time_init = time.time()
+                        self.jugadas_2 = []
 
             if evento.type == pygame.KEYDOWN:
                 if len(self.pasos) > 0:
@@ -161,7 +180,7 @@ class Tablero(Ventana):
         self.pantalla.blit(
             imagen,
             [
-                (self.margen + self.largo) * columna + self.margen,
+                (self.margen + self.ancho) * columna + self.margen,
                 (self.margen + self.alto) * fila + self.margen
             ]
         )
@@ -190,10 +209,10 @@ class Tablero(Ventana):
 
                 pygame.draw.rect(self.pantalla,
                                  color,
-                                 [(self.margen + self.largo) * columna + self.margen,
+                                 [(self.margen + self.ancho) * columna + self.margen,
                                   (self.margen + self.alto) *
                                   fila + self.margen,
-                                  self.largo,
+                                  self.ancho,
                                   self.alto])
 
                 # pintar imagenes
@@ -201,6 +220,58 @@ class Tablero(Ventana):
                     self.dibujar_imagen(self.caballo, columna, fila)
                 if self.grid[fila][columna] == 3:
                     self.dibujar_imagen(self.bonus, columna, fila)
+                mov = list(filter(lambda x: (x[self.pos_mouse()] == 1), self.jugadas_2))
+                if len(mov) > 0:
+                    self.grid = mov[0]
+                else:
+                    self.grid = self.grid_inicial
+
+
+        ##turnos
+        if self.turno == 1:
+            _time = (time.time() - self.time_init)
+            if _time <= 1.5:
+                return
+            print("turno 1")
+            nodo = Nodo(self.grid,1)
+            self.jugadas_1 = Juego().crearArbol(nodo,self.profundidad,0,[nodo])
+            print("jugadas 1")
+            print(self.jugadas_1)
+            print(len(self.jugadas_1))
+            if len(self.jugadas_1) > 0:
+                self.pasos.append(self.grid)
+                print(self.grid)
+                jugadas = list(np.copy(self.jugadas_1))
+                self.grid=Juego().minimax(jugadas).entorno
+                self.grid_inicial = self.grid
+                print(self.grid)
+                self.pasos.append(self.grid)
+                self.paso_actual = len(self.pasos) - 1
+            self.turno = 2
+
+        if self.turno == 2 and len(self.jugadas_2) == 0:
+            nodo = Nodo(self.grid, 2)
+            self.jugadas_2 = list(map(lambda x: x.entorno, Juego().crearArbol(nodo, 1, 0, [nodo])))
+            if len(self.jugadas_2) == 0:
+                self.turno = 1
+            print("jugadas 2")
+            print(self.jugadas_2)
+        print(f"jugadas 1: {len(self.jugadas_1)}  and jugadas 2: {len(self.jugadas_2)}")
+        if len(self.jugadas_1) == 1 and len(self.jugadas_2) == 1:
+            print(self.grid)
+            jugadas_j = np.count_nonzero(np.array(self.grid) == 4)
+            jugadas_m = np.count_nonzero(np.array(self.grid) == 5)
+            print(f"Jugadas maquina: {jugadas_m}")
+            print(f"Jugadas jugador: {jugadas_j}")
+            gandor = ""
+            if jugadas_m == jugadas_j:
+                ganador = "Empate"
+            elif jugadas_m > jugadas_j:
+                gandor = "Maquina"
+            else:
+                gandor = "Jugador"
+            print(f"Ganador: {gandor}")
+            self.salir = True
 
     def main_loop(self):
         # -------- Bucle Principal del Programa-----------
@@ -216,8 +287,6 @@ class Tablero(Ventana):
 
             # actualizar rectangulo de cursor
             self.cursor.updatecursor()
-            # self.busqueda_no_inf.update(
-            #     self.pantalla, self.cursor, self.estado_interfaz == 0)
 
             # Avanzamos y actualizamos la pantalla con lo que hemos dibujado.
             pygame.display.flip()
@@ -274,7 +343,7 @@ class Menu(Ventana):
         chars = [[caballo1, 1], [caballo2, 2], [bono, 3], [bono2, 3], [bono3, 3]]
         for char in chars:
             grid[char[0][0]][char[0][1]] = char[1]
-        
+
 
         Tablero(grid=grid, nivel=nivel).show_window()
 
@@ -285,13 +354,13 @@ class Menu(Ventana):
             if evento.type == pygame.MOUSEBUTTONDOWN:
                 if evento.button == 1:
                     if self.cursor.colliderect(self.principiante.rect):
-                        self.iniciar_nivel(1)
+                        self.iniciar_nivel(0)
                         self.salir = True
                     if self.cursor.colliderect(self.amateur.rect):
-                        self.iniciar_nivel(2)
+                        self.iniciar_nivel(1)
                         self.salir = True
                     if self.cursor.colliderect(self.experto.rect):
-                        self.iniciar_nivel(3)
+                        self.iniciar_nivel(2)
                         self.salir = True
 
     def main_loop(self):
@@ -336,11 +405,12 @@ class Menu(Ventana):
     def show_window(self):
         self.main_loop()
 
-# Menu().show_window()
+Menu().show_window()
 
 #---------------------------------------------
-grid = np.loadtxt('entorno.txt', dtype=int)
-nodo = Nodo(grid,1)
-jugadas=Juego().crearArbol(nodo,3,0,[nodo])
-jugada=Juego().minimax(jugadas)
-Tablero(grid=jugada.entorno).show_window()
+# grid = np.loadtxt('entorno.txt', dtype=int)
+# nodo = Nodo(grid,1)
+# jugadas=Juego().crearArbol(nodo,3,0,[nodo])
+# jugada=Juego().minimax(jugadas)
+# print(jugada.entorno)
+# Tablero(grid=jugada.entorno).show_window()
