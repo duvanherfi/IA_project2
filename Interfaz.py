@@ -118,6 +118,9 @@ class Tablero(Ventana):
         self.turno = 1
         self.profundidad = self.DIFICULTAD[self.nivel]
         self.time_init = time.time()
+        self.jugadas_1 = []
+        self.jugadas_2 = []
+        self.pos_ant = 0
 
 
     def inicializar_imagenes(self):
@@ -153,16 +156,18 @@ class Tablero(Ventana):
                 self.salir = True
             if evento.type == pygame.MOUSEBUTTONDOWN:
                 if evento.button == 1: #and self.turno == 2:
-                    print("Turno 2")
-                    print(f"pos mouse: {self.pos_mouse()}")
-                    post_ant = np.where(self.grid == 1)
-                    print(f"pos ant: {post_ant}")
-                    self.grid[self.pos_mouse()] = 1
-                    print(self.grid)
-                    self.grid[post_ant] = 4
-                    self.pasos.append(self.grid)
-                    self.paso_actual = len(self.pasos) - 1
-                    self.turno = 1
+                    mov = list(filter(lambda x: (x[self.pos_mouse()] == 1), self.jugadas_2))
+                    if len(mov) > 0:
+                        print("Turno 2")
+                        print(f"pos mouse: {self.pos_mouse()}")
+                        self.grid = mov[0]
+                        self.grid_inicial = self.grid
+                        print(self.grid)
+                        self.pasos.append(self.grid)
+                        self.paso_actual = len(self.pasos) - 1
+                        self.turno = 1
+                        self.time_init = time.time()
+                        self.jugadas_2 = []
 
             if evento.type == pygame.KEYDOWN:
                 if len(self.pasos) > 0:
@@ -215,22 +220,58 @@ class Tablero(Ventana):
                     self.dibujar_imagen(self.caballo, columna, fila)
                 if self.grid[fila][columna] == 3:
                     self.dibujar_imagen(self.bonus, columna, fila)
+                mov = list(filter(lambda x: (x[self.pos_mouse()] == 1), self.jugadas_2))
+                if len(mov) > 0:
+                    self.grid = mov[0]
+                else:
+                    self.grid = self.grid_inicial
+
 
         ##turnos
         if self.turno == 1:
             _time = (time.time() - self.time_init)
-            if not _time >= 1.5:
+            if _time <= 1.5:
                 return
             print("turno 1")
             nodo = Nodo(self.grid,1)
-            jugadas=Juego().crearArbol(nodo,self.profundidad,0,[nodo])
-            self.pasos.append(self.grid)
-            print(self.grid)
-            self.grid=Juego().minimax(jugadas).entorno
-            print(self.grid)
-            self.pasos.append(self.grid)
-            self.paso_actual = len(self.pasos) - 1
+            self.jugadas_1 = Juego().crearArbol(nodo,self.profundidad,0,[nodo])
+            print("jugadas 1")
+            print(self.jugadas_1)
+            print(len(self.jugadas_1))
+            if len(self.jugadas_1) > 0:
+                self.pasos.append(self.grid)
+                print(self.grid)
+                jugadas = list(np.copy(self.jugadas_1))
+                self.grid=Juego().minimax(jugadas).entorno
+                self.grid_inicial = self.grid
+                print(self.grid)
+                self.pasos.append(self.grid)
+                self.paso_actual = len(self.pasos) - 1
             self.turno = 2
+
+        if self.turno == 2 and len(self.jugadas_2) == 0:
+            nodo = Nodo(self.grid, 2)
+            self.jugadas_2 = list(map(lambda x: x.entorno, Juego().crearArbol(nodo, 1, 0, [nodo])))
+            if len(self.jugadas_2) == 0:
+                self.turno = 1
+            print("jugadas 2")
+            print(self.jugadas_2)
+        print(f"jugadas 1: {len(self.jugadas_1)}  and jugadas 2: {len(self.jugadas_2)}")
+        if len(self.jugadas_1) == 1 and len(self.jugadas_2) == 1:
+            print(self.grid)
+            jugadas_j = np.count_nonzero(np.array(self.grid) == 4)
+            jugadas_m = np.count_nonzero(np.array(self.grid) == 5)
+            print(f"Jugadas maquina: {jugadas_m}")
+            print(f"Jugadas jugador: {jugadas_j}")
+            gandor = ""
+            if jugadas_m == jugadas_j:
+                ganador = "Empate"
+            elif jugadas_m > jugadas_j:
+                gandor = "Maquina"
+            else:
+                gandor = "Jugador"
+            print(f"Ganador: {gandor}")
+            self.salir = True
 
     def main_loop(self):
         # -------- Bucle Principal del Programa-----------
@@ -302,7 +343,7 @@ class Menu(Ventana):
         chars = [[caballo1, 1], [caballo2, 2], [bono, 3], [bono2, 3], [bono3, 3]]
         for char in chars:
             grid[char[0][0]][char[0][1]] = char[1]
-        
+
 
         Tablero(grid=grid, nivel=nivel).show_window()
 
