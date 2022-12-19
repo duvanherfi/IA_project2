@@ -44,13 +44,14 @@ class Fuente:
     ROJO = (255, 0, 0)
     AMARILLO = (231, 242, 0)
 
-    def __init__(self, fuente, size, texto, coor):
+    def __init__(self, fuente, size, texto, coor, color=None):
         self.fuente = fuente
         self.size = size
         self.font = pygame.font.SysFont(fuente, size)
         self.texto = texto
         self.coor = coor
         self.rect = pygame.Rect(coor[0], coor[1], len(texto) * 10, (len(texto) / 3) * 10)
+        self.color = color if not color is None else [self.VERDE, self.AMARILLO]
 
     def set_size(self, size):
         self.font = pygame.font.SysFont(self.fuente, size)
@@ -59,10 +60,10 @@ class Fuente:
         self.font.set_underline(bool)
 
     def render(self, antialias= 0, cursor=None):
-        color = self.VERDE
+        color = self.color[0]
         if not cursor is None:
             if cursor.colliderect(self.rect):
-                color = self.AMARILLO
+                color = self.color[1]
         return self.font.render(self.texto, antialias, color)
 
 
@@ -110,12 +111,13 @@ class Tablero(Ventana):
         largo_m = len(self.grid[0])
         margen_total = ((self.margen * 10) + 5)
         ##inicializamos pygame
-        super().__init__(largo_m * margen_total, alto_m * margen_total)
+        super().__init__(largo_m * margen_total, (alto_m * margen_total)+100)
         self.paso_actual = paso_actual
         self.caballo = None
         self.bonus = None
         self.inicializar_imagenes()
         self.turno = 1
+        self.fin = False
         self.profundidad = self.DIFICULTAD[self.nivel]
         self.time_init = time.time()
         self.jugadas_1 = []
@@ -146,8 +148,8 @@ class Tablero(Ventana):
     def pos_mouse(self):
         pos = pygame.mouse.get_pos()
         return (
-            pos[1] // (self.ancho + self.margen),
-            pos[0] // (self.alto + self.margen)
+            (pos[1] // (self.ancho + self.margen))-2,
+            (pos[0] // (self.alto  + self.margen))
         )
 
     def loop_events(self):
@@ -155,7 +157,7 @@ class Tablero(Ventana):
             if evento.type == pygame.QUIT:
                 self.salir = True
             if evento.type == pygame.MOUSEBUTTONDOWN:
-                if evento.button == 1: #and self.turno == 2:
+                if evento.button == 1 and self.turno == 2:
                     mov = list(filter(lambda x: (x[self.pos_mouse()] == 1), self.jugadas_2))
                     if len(mov) > 0:
                         print("Turno 2")
@@ -180,8 +182,8 @@ class Tablero(Ventana):
         self.pantalla.blit(
             imagen,
             [
-                (self.margen + self.ancho) * columna + self.margen,
-                (self.margen + self.alto) * fila + self.margen
+                ((self.margen + self.ancho) * columna + self.margen),
+                ((self.margen + self.alto) * fila + self.margen) + 100
             ]
         )
 
@@ -191,6 +193,43 @@ class Tablero(Ventana):
                 self.grid = self.pasos[0]
             else:
                 self.grid = self.pasos[self.paso_actual]
+
+    def jugadasj(self):
+        return np.count_nonzero(np.array(self.grid) == 4) + 1
+
+    def jugadasm(self):
+        return np.count_nonzero(np.array(self.grid) == 5) + 1
+
+    def ganador(self):
+        if self.jugadasm() == self.jugadasj():
+            return "Empate"
+        elif self.jugadasm() > self.jugadasj():
+            return "Maquina"
+        else:
+            return "Jugador"
+
+    def resumen_partida(self):
+        x = 0
+        y = 0
+        return [
+            Fuente('Gabriola', 25, f"Jugadas maquina: {self.jugadasm()}", (x, y)),
+            Fuente('Gabriola', 25, f"Jugadas jugador: {self.jugadasj()}", (x + 280, y)),
+            Fuente('Gabriola', 25, "Turno " + ("Maquina" if self.turno == 1 else "Jugador"), (x, y + 30)),
+            Fuente('Gabriola', 25, ("Maquina" if self.turno == 1 else "Jugador"), (x + 5*10, y + 30), [self.AMARILLO]),
+        ]
+
+    def draw_resumen(self):
+        for fuente in self.resumen_partida():
+            self.pantalla.blit(
+                fuente.render(),
+                fuente.coor
+            )
+
+    def draw_ganador(self):
+        self.pantalla.blit(
+            Fuente('Gabriola', 27, f"Ganador {self.ganador()}!!", (0, 60), [self.AMARILLO]).render(),
+            (0, 60)
+        )
 
     def draw_loop(self):
         # Dibujamos la retícula
@@ -210,8 +249,7 @@ class Tablero(Ventana):
                 pygame.draw.rect(self.pantalla,
                                  color,
                                  [(self.margen + self.ancho) * columna + self.margen,
-                                  (self.margen + self.alto) *
-                                  fila + self.margen,
+                                  ((self.margen + self.alto) * fila + self.margen) + 100,
                                   self.ancho,
                                   self.alto])
 
@@ -221,14 +259,14 @@ class Tablero(Ventana):
                 if self.grid[fila][columna] == 3:
                     self.dibujar_imagen(self.bonus, columna, fila)
                 mov = list(filter(lambda x: (x[self.pos_mouse()] == 1), self.jugadas_2))
+
                 if len(mov) > 0:
                     self.grid = mov[0]
                 else:
                     self.grid = self.grid_inicial
 
-
         ##turnos
-        if self.turno == 1:
+        if self.turno == 1 and self.fin is False:
             _time = (time.time() - self.time_init)
             if _time <= 1.5:
                 return
@@ -238,7 +276,7 @@ class Tablero(Ventana):
             print("jugadas 1")
             print(self.jugadas_1)
             print(len(self.jugadas_1))
-            if len(self.jugadas_1) > 0:
+            if len(self.jugadas_1) > 1:
                 self.pasos.append(self.grid)
                 print(self.grid)
                 jugadas = list(np.copy(self.jugadas_1))
@@ -249,29 +287,17 @@ class Tablero(Ventana):
                 self.paso_actual = len(self.pasos) - 1
             self.turno = 2
 
-        if self.turno == 2 and len(self.jugadas_2) == 0:
+        if self.turno == 2 and self.fin is False:
             nodo = Nodo(self.grid, 2)
-            self.jugadas_2 = list(map(lambda x: x.entorno, Juego().crearArbol(nodo, 1, 0, [nodo])))
-            if len(self.jugadas_2) == 0:
+            self.jugadas_2 = list(map(lambda x: x.entorno, Juego().crearArbol(nodo, 1, 1, [nodo])))
+            if len(self.jugadas_2) == 1:
                 self.turno = 1
             print("jugadas 2")
             print(self.jugadas_2)
         print(f"jugadas 1: {len(self.jugadas_1)}  and jugadas 2: {len(self.jugadas_2)}")
         if len(self.jugadas_1) == 1 and len(self.jugadas_2) == 1:
             print(self.grid)
-            jugadas_j = np.count_nonzero(np.array(self.grid) == 4) + 1
-            jugadas_m = np.count_nonzero(np.array(self.grid) == 5) + 1
-            print(f"Jugadas maquina: {jugadas_m}")
-            print(f"Jugadas jugador: {jugadas_j}")
-            gandor = ""
-            if jugadas_m == jugadas_j:
-                ganador = "Empate"
-            elif jugadas_m > jugadas_j:
-                gandor = "Maquina"
-            else:
-                gandor = "Jugador"
-            print(f"Ganador: {gandor}")
-            self.salir = True
+            self.fin = True
 
     def main_loop(self):
         # -------- Bucle Principal del Programa-----------
@@ -284,6 +310,11 @@ class Tablero(Ventana):
             self.pantalla.fill(self.NEGRO)
 
             self.draw_loop()
+
+            self.draw_resumen()
+
+            if self.fin:
+                self.draw_ganador()
 
             # actualizar rectangulo de cursor
             self.cursor.updatecursor()
