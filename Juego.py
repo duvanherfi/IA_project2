@@ -1,4 +1,5 @@
 from Nodo import Nodo,np
+import sys
 class Juego:
   
   def minimax(self,arbol):

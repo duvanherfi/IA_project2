@@ -7,7 +7,6 @@ class Nodo:
         self.profundidad = profundidad
         self.utilidad = utilidad
         self.padre = padre
-        sys.setrecursionlimit(2700)
 
     def posc(self):
         if (self.tipo == 1):

@@ -1,10 +1,11 @@
 import pygame
 import numpy as np
 import random
-import sys
+from recursion import recursion_depth
 from Juego import Juego
 from Nodo import Nodo
 import time
+import sys
 
 
 
@@ -124,6 +125,7 @@ class Tablero(Ventana):
         self.jugadas_2 = []
         self.pos_ant = 0
         self.muestra = False
+        self.calcular = False
 
 
     def inicializar_imagenes(self):
@@ -235,6 +237,15 @@ class Tablero(Ventana):
     def draw_loop(self):
         # Dibujamos la retícula
         self.set_grid()
+        mov = list(filter(lambda x: (x[self.pos_mouse()] == 1), self.jugadas_2))
+
+        if len(mov) > 0:
+            self.muestra = True
+            self.grid = mov[0]
+        else:
+            self.muestra = False
+            self.grid = self.grid_inicial
+
         for fila in range(len(self.grid)):
             for columna in range(len(self.grid[0])):
                 color = self.BLANCO
@@ -259,37 +270,8 @@ class Tablero(Ventana):
                     self.dibujar_imagen(self.caballo, columna, fila)
                 if self.grid[fila][columna] == 3:
                     self.dibujar_imagen(self.bonus, columna, fila)
-                mov = list(filter(lambda x: (x[self.pos_mouse()] == 1), self.jugadas_2))
 
-                if len(mov) > 0:
-                    self.muestra = True
-                    self.grid = mov[0]
-                else:
-                    self.muestra = False
-                    self.grid = self.grid_inicial
-
-        ##turnos
-        if self.turno == 1 and self.fin is False and self.muestra is False:
-            _time = (time.time() - self.time_init)
-            if _time <= 1.5:
-                return
-            print("turno 1")
-            nodo = Nodo(self.grid,1)
-            self.jugadas_1 = Juego().crearArbol(nodo,self.profundidad,0,[nodo])
-            print("jugadas 1")
-            print(self.jugadas_1)
-            print(len(self.jugadas_1))
-            if len(self.jugadas_1) > 1:
-                self.pasos.append(self.grid)
-                print(self.grid)
-                jugadas = list(np.copy(self.jugadas_1))
-                self.grid=Juego().minimax(jugadas).entorno
-                self.grid_inicial = self.grid
-                print(self.grid)
-                self.pasos.append(self.grid)
-                self.paso_actual = len(self.pasos) - 1
-            self.turno = 2
-
+    def calcular_mov_jug(self):
         if self.turno == 2 and self.fin is False and self.muestra is False:
             nodo = Nodo(self.grid, 2)
             self.jugadas_2 = list(map(lambda x: x.entorno, Juego().crearArbol(nodo, 1, 1, [nodo])))
@@ -297,6 +279,31 @@ class Tablero(Ventana):
                 self.turno = 1
             print("jugadas 2")
             print(self.jugadas_2)
+
+    def turno_maq(self):
+        ##turnos
+        if self.turno == 1 and self.fin is False and self.muestra is False:
+            _time = (time.time() - self.time_init)
+            if _time <= 1.5:
+                return
+            print("turno 1")
+            nodo = Nodo(self.grid, 1)
+            self.jugadas_1 = Juego().crearArbol(nodo, self.profundidad, 0, [nodo])
+            print("jugadas 1")
+            print(self.jugadas_1)
+            print(len(self.jugadas_1))
+            if len(self.jugadas_1) > 1:
+                self.pasos.append(self.grid)
+                print(self.grid)
+                jugadas = list(np.copy(self.jugadas_1))
+                self.grid = Juego().minimax(jugadas).entorno
+                self.grid_inicial = self.grid
+                print(self.grid)
+                self.pasos.append(self.grid)
+                self.paso_actual = len(self.pasos) - 1
+            self.turno = 2
+
+
         print(f"jugadas 1: {len(self.jugadas_1)}  and jugadas 2: {len(self.jugadas_2)}")
         if len(self.jugadas_1) == 1 and len(self.jugadas_2) == 1:
             print(self.grid)
@@ -312,7 +319,11 @@ class Tablero(Ventana):
             # Establecemos el fondo de pantalla.
             self.pantalla.fill(self.NEGRO)
 
+            self.turno_maq()
             self.draw_loop()
+
+            self.calcular_mov_jug()
+
 
             self.draw_resumen()
 
@@ -379,7 +390,8 @@ class Menu(Ventana):
             grid[char[0][0]][char[0][1]] = char[1]
 
         #grid = np.loadtxt('entorno.txt', dtype=int)
-        Tablero(grid=grid, nivel=nivel).show_window()
+        with recursion_depth(1000000):
+            Tablero(grid=grid, nivel=nivel).show_window()
 
     def loop_events(self):
         for evento in pygame.event.get():
