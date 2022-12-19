@@ -8,7 +8,6 @@ import time
 import sys
 
 
-
 class Cursor(pygame.Rect):
     def __init__(self):
         pygame.Rect.__init__(self, 0, 0, 1, 1)
@@ -39,6 +38,7 @@ class Button(pygame.sprite.Sprite):
         else:
             self.rect.left, self.rect.top = (-100, -100)
 
+
 class Fuente:
     BLANCO = (255, 255, 255)
     VERDE = (3, 175, 80)
@@ -51,8 +51,10 @@ class Fuente:
         self.font = pygame.font.SysFont(fuente, size)
         self.texto = texto
         self.coor = coor
-        self.rect = pygame.Rect(coor[0], coor[1], len(texto) * 10, (len(texto) / 3) * 10)
-        self.color = color if not color is None else [self.VERDE, self.AMARILLO]
+        self.rect = pygame.Rect(coor[0], coor[1], len(
+            texto) * 10, (len(texto) / 3) * 10)
+        self.color = color if not color is None else [
+            self.VERDE, self.AMARILLO]
 
     def set_size(self, size):
         self.font = pygame.font.SysFont(self.fuente, size)
@@ -60,7 +62,7 @@ class Fuente:
     def underline(self, bool):
         self.font.set_underline(bool)
 
-    def render(self, antialias= 0, cursor=None):
+    def render(self, antialias=0, cursor=None):
         color = self.color[0]
         if not cursor is None:
             if cursor.colliderect(self.rect):
@@ -84,8 +86,8 @@ class Ventana:
         # variables
         self.salir = False
         # Establecemos el LARGO y ALTO de la pantalla
-        flags = pygame.RESIZABLE# | pygame.SCALED
-        self.dimension_ventana = [largo , alto]
+        flags = pygame.RESIZABLE  # | pygame.SCALED
+        self.dimension_ventana = [largo, alto]
         self.pantalla = pygame.display.set_mode(self.dimension_ventana, flags)
         # Establecemos el título de la pantalla.
         pygame.display.set_caption("Proyecto 2 IA")
@@ -94,16 +96,18 @@ class Ventana:
         # cursor
         self.cursor = Cursor()
 
+
 class Tablero(Ventana):
     DIFICULTAD = [2, 4, 6]
+
     def __init__(self, grid=[], pasos=[], paso_actual=0, nivel=1, largo=50, alto=50, margen=5):
-        #grid
+        # grid
         self.grid = pasos[paso_actual] if len(pasos) > 0 else grid
         self.grid_inicial = self.grid
         self.pasos = pasos
-        #nivel
+        # nivel
         self.nivel = nivel
-        #largo y alto
+        # largo y alto
         self.ancho = largo
         self.alto = alto
         # Establecemos el margen entre las celdas.
@@ -111,7 +115,7 @@ class Tablero(Ventana):
         alto_m = len(self.grid)
         largo_m = len(self.grid[0])
         margen_total = ((self.margen * 10) + 5)
-        ##inicializamos pygame
+        # inicializamos pygame
         super().__init__(largo_m * margen_total, (alto_m * margen_total)+100)
         self.paso_actual = paso_actual
         self.caballo = None
@@ -126,7 +130,6 @@ class Tablero(Ventana):
         self.pos_ant = 0
         self.muestra = False
         self.calcular = False
-
 
     def inicializar_imagenes(self):
         self.caballo = pygame.image.load("img/caballo.png").convert()
@@ -152,7 +155,7 @@ class Tablero(Ventana):
         pos = pygame.mouse.get_pos()
         return (
             (pos[1] // (self.ancho + self.margen))-2,
-            (pos[0] // (self.alto  + self.margen))
+            (pos[0] // (self.alto + self.margen))
         )
 
     def loop_events(self):
@@ -161,13 +164,14 @@ class Tablero(Ventana):
                 self.salir = True
             if evento.type == pygame.MOUSEBUTTONDOWN:
                 if evento.button == 1 and self.turno == 2:
-                    mov = list(filter(lambda x: (x[self.pos_mouse()] == 1), self.jugadas_2))
+                    mov = list(
+                        filter(lambda x: (x[self.pos_mouse()] == 1), self.jugadas_2))
                     if len(mov) > 0:
-                        print("Turno 2")
-                        print(f"pos mouse: {self.pos_mouse()}")
+                        # print("Turno 2")
+                        # print(f"pos mouse: {self.pos_mouse()}")
                         self.grid = mov[0]
                         self.grid_inicial = self.grid
-                        print(self.grid)
+                        # print(self.grid)
                         self.pasos.append(self.grid)
                         self.paso_actual = len(self.pasos) - 1
                         self.turno = 1
@@ -215,10 +219,14 @@ class Tablero(Ventana):
         x = 0
         y = 0
         return [
-            Fuente('Gabriola', 25, f"Jugadas maquina: {self.jugadasm()}", (x, y)),
-            Fuente('Gabriola', 25, f"Jugadas jugador: {self.jugadasj()}", (x + 280, y)),
-            Fuente('Gabriola', 25, "Turno " + ("Maquina" if self.turno == 1 else "Jugador"), (x, y + 30)),
-            Fuente('Gabriola', 25, ("Maquina" if self.turno == 1 else "Jugador"), (x + 5*10, y + 30), [self.AMARILLO]),
+            Fuente('Gabriola', 25,
+                   f"Jugadas maquina: {self.jugadasm()}", (x, y)),
+            Fuente('Gabriola', 25,
+                   f"Jugadas jugador: {self.jugadasj()}", (x + 280, y)),
+            Fuente('Gabriola', 25, "Turno " +
+                   ("Maquina" if self.turno == 1 else "Jugador"), (x, y + 30)),
+            Fuente('Gabriola', 25, ("Maquina" if self.turno ==
+                   1 else "Jugador"), (x + 5*10, y + 30), [self.AMARILLO]),
         ]
 
     def draw_resumen(self):
@@ -230,14 +238,16 @@ class Tablero(Ventana):
 
     def draw_ganador(self):
         self.pantalla.blit(
-            Fuente('Gabriola', 27, f"Ganador {self.ganador()}!!", (0, 60), [self.AMARILLO]).render(),
+            Fuente('Gabriola', 27, f"Ganador {self.ganador()}!!", (0, 60), [
+                   self.AMARILLO]).render(),
             (0, 60)
         )
 
     def draw_loop(self):
         # Dibujamos la retícula
         self.set_grid()
-        mov = list(filter(lambda x: (x[self.pos_mouse()] == 1), self.jugadas_2))
+        mov = list(
+            filter(lambda x: (x[self.pos_mouse()] == 1), self.jugadas_2))
 
         if len(mov) > 0:
             self.muestra = True
@@ -261,7 +271,8 @@ class Tablero(Ventana):
                 pygame.draw.rect(self.pantalla,
                                  color,
                                  [(self.margen + self.ancho) * columna + self.margen,
-                                  ((self.margen + self.alto) * fila + self.margen) + 100,
+                                  ((self.margen + self.alto)
+                                   * fila + self.margen) + 100,
                                   self.ancho,
                                   self.alto])
 
@@ -274,39 +285,40 @@ class Tablero(Ventana):
     def calcular_mov_jug(self):
         if self.turno == 2 and self.fin is False and self.muestra is False:
             nodo = Nodo(self.grid, 2)
-            self.jugadas_2 = list(map(lambda x: x.entorno, Juego().crearArbol(nodo, 1, 1, [nodo])))
+            self.jugadas_2 = list(
+                map(lambda x: x.entorno, Juego().crearArbol(nodo, 1, 1, [nodo])))
             if len(self.jugadas_2) == 1:
                 self.turno = 1
-            print("jugadas 2")
-            print(self.jugadas_2)
+            # print("jugadas 2")
+            # print(self.jugadas_2)
 
     def turno_maq(self):
-        ##turnos
+        # turnos
         if self.turno == 1 and self.fin is False and self.muestra is False:
             _time = (time.time() - self.time_init)
             if _time <= 1.5:
                 return
-            print("turno 1")
+            # print("turno 1")
             nodo = Nodo(self.grid, 1)
-            self.jugadas_1 = Juego().crearArbol(nodo, self.profundidad, 0, [nodo])
-            print("jugadas 1")
-            print(self.jugadas_1)
-            print(len(self.jugadas_1))
+            self.jugadas_1 = Juego().crearArbol(
+                nodo, self.profundidad, 0, [nodo])
+            # print("jugadas 1")
+            # print(self.jugadas_1)
+            # print(len(self.jugadas_1))
             if len(self.jugadas_1) > 1:
                 self.pasos.append(self.grid)
-                print(self.grid)
+                # print(self.grid)
                 jugadas = list(np.copy(self.jugadas_1))
                 self.grid = Juego().minimax(jugadas).entorno
                 self.grid_inicial = self.grid
-                print(self.grid)
+                # print(self.grid)
                 self.pasos.append(self.grid)
                 self.paso_actual = len(self.pasos) - 1
             self.turno = 2
 
-
-        print(f"jugadas 1: {len(self.jugadas_1)}  and jugadas 2: {len(self.jugadas_2)}")
+        # print(f"jugadas 1: {len(self.jugadas_1)}  and jugadas 2: {len(self.jugadas_2)}")
         if len(self.jugadas_1) == 1 and len(self.jugadas_2) == 1:
-            print(self.grid)
+            # print(self.grid)
             self.fin = True
 
     def main_loop(self):
@@ -323,7 +335,6 @@ class Tablero(Ventana):
             self.draw_loop()
 
             self.calcular_mov_jug()
-
 
             self.draw_resumen()
 
@@ -343,21 +354,25 @@ class Tablero(Ventana):
     def show_window(self):
         self.main_loop()
 
+
 class Menu(Ventana):
 
     def __init__(self, largo=600, alto=400):
-        #largo y alto
+        # largo y alto
         self.largo = largo
         self.alto = alto
-        ##inicializamos pygame
+        # inicializamos pygame
         super().__init__(largo, alto)
 
         x = (self.dimension_ventana[0]/2)
         y = 20
         self.titulo = Fuente('Gabriola', 50, "War Horses", (x - 7 * 10, y))
-        self.principiante = Fuente('Gabriola', 34, "principiante", (x - 5.5 * 10, y + 100))
-        self.amateur = Fuente('Gabriola', 34, "amateur", (x - 3.5 * 10, y + 170))
-        self.experto = Fuente('Gabriola', 34, "experto", (x - 3.5 * 10, y + 240))
+        self.principiante = Fuente(
+            'Gabriola', 34, "principiante", (x - 5.5 * 10, y + 100))
+        self.amateur = Fuente('Gabriola', 34, "amateur",
+                              (x - 3.5 * 10, y + 170))
+        self.experto = Fuente('Gabriola', 34, "experto",
+                              (x - 3.5 * 10, y + 240))
 
     def iniciar_nivel(self, nivel):
         grid = np.zeros([8, 8], dtype=int)
@@ -385,11 +400,12 @@ class Menu(Ventana):
                     np.array_equal(bono3, caballo1) is False and \
                     np.array_equal(bono3, caballo2) is False:
                 break
-        chars = [[caballo1, 1], [caballo2, 2], [bono, 3], [bono2, 3], [bono3, 3]]
+        chars = [[caballo1, 1], [caballo2, 2],
+                 [bono, 3], [bono2, 3], [bono3, 3]]
         for char in chars:
             grid[char[0][0]][char[0][1]] = char[1]
 
-        #grid = np.loadtxt('entorno.txt', dtype=int)
+        # grid = np.loadtxt('entorno.txt', dtype=int)
         with recursion_depth(1000000):
             Tablero(grid=grid, nivel=nivel).show_window()
 
@@ -451,9 +467,10 @@ class Menu(Ventana):
     def show_window(self):
         self.main_loop()
 
+
 Menu().show_window()
 
-#---------------------------------------------
+# ---------------------------------------------
 # grid = np.loadtxt('entorno.txt', dtype=int)
 # nodo = Nodo(grid,1)
 # jugadas=Juego().crearArbol(nodo,3,0,[nodo])

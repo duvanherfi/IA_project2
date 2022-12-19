@@ -1,7 +1,9 @@
 import numpy as np
 import sys
+
+
 class Nodo:
-    def __init__(self,entorno,tipo,utilidad=-1000000,profundidad=0,padre=None):
+    def __init__(self, entorno, tipo, utilidad=-1000000, profundidad=0, padre=None):
         self.entorno = entorno
         self.tipo = tipo
         self.profundidad = profundidad
@@ -21,12 +23,12 @@ class Nodo:
 
         # 1->Up-Right, 2->Right-Up, 3->Right-Down, 4->Down-Right
         # 5->Down-Left, 6->Left-Down, 7->Left-Up, 8->Up-Left
-        #La primera dirección siempre indica el mayor desplazamiento del caballo(2 casillas)
-        #1->Up-Right
+        # La primera dirección siempre indica el mayor desplazamiento del caballo(2 casillas)
+        # 1->Up-Right
         if (self.tipo == 1):
             caballo = 2
         else:
-            caballo=1
+            caballo = 1
         if (direccion == 1):
             for i in range(len(hijo)):
                 for j in range(len(hijo[i])):
@@ -34,7 +36,7 @@ class Nodo:
                         hijo[i-2][j+1] = caballo
                         hijo[i][j] = pisando
                         return hijo
-        #2->Right-Up
+        # 2->Right-Up
         if (direccion == 2):
             for i in range(len(hijo)):
                 for j in range(len(hijo[i])):
@@ -42,7 +44,7 @@ class Nodo:
                         hijo[i-1][j+2] = caballo
                         hijo[i][j] = pisando
                         return hijo
-        #3->Right-Down
+        # 3->Right-Down
         if (direccion == 3):
             for i in range(len(hijo)):
                 for j in range(len(hijo[i])):
@@ -50,7 +52,7 @@ class Nodo:
                         hijo[i+1][j+2] = caballo
                         hijo[i][j] = pisando
                         return hijo
-        #4->Down-Right
+        # 4->Down-Right
         if (direccion == 4):
             for i in range(len(hijo)):
                 for j in range(len(hijo[i])):
@@ -58,7 +60,7 @@ class Nodo:
                         hijo[i+2][j+1] = caballo
                         hijo[i][j] = pisando
                         return hijo
-        #5->Down-Left
+        # 5->Down-Left
         if (direccion == 5):
             for i in range(len(hijo)):
                 for j in range(len(hijo[i])):
@@ -66,7 +68,7 @@ class Nodo:
                         hijo[i+2][j-1] = caballo
                         hijo[i][j] = pisando
                         return hijo
-        #6->Left-Down
+        # 6->Left-Down
         if (direccion == 6):
             for i in range(len(hijo)):
                 for j in range(len(hijo[i])):
@@ -74,7 +76,7 @@ class Nodo:
                         hijo[i+1][j-2] = caballo
                         hijo[i][j] = pisando
                         return hijo
-        #7->Left-Up
+        # 7->Left-Up
         if (direccion == 7):
             for i in range(len(hijo)):
                 for j in range(len(hijo[i])):
@@ -82,7 +84,7 @@ class Nodo:
                         hijo[i-1][j-2] = caballo
                         hijo[i][j] = pisando
                         return hijo
-        #8->Up-Left
+        # 8->Up-Left
         if (direccion == 8):
             for i in range(len(hijo)):
                 for j in range(len(hijo[i])):
@@ -90,26 +92,25 @@ class Nodo:
                         hijo[i-2][j-1] = caballo
                         hijo[i][j] = pisando
                         return hijo
-                        
-    def setUtilidad(self,limit):
-        utilidad_max=0
-        utilidad_min=0
-        if (self.profundidadAcumulada() == limit):
+
+    def setUtilidad(self, limit, hijo_hoja=False):
+        utilidad_max = 0
+        utilidad_min = 0
+        puntos_caballo1 = 0
+        puntos_caballo2 = 0
+        if (self.profundidadAcumulada() == limit or hijo_hoja):
             for i in range(len(self.entorno)):
                 for j in range(len(self.entorno[i])):
                     if (self.entorno[i][j] == 4):
-                        utilidad_max +=1
-                    if (self.entorno[i][j]==5):
-                        utilidad_min +=1
-            if (self.tipo == 1):
-                self.utilidad=utilidad_max
-            else:
-                self.utilidad=utilidad_min
+                        puntos_caballo1 += 1
+                    if (self.entorno[i][j] == 5):
+                        puntos_caballo2 += 1
+            self.utilidad = puntos_caballo2 - puntos_caballo1
         else:
             if (self.tipo == 1):
-                self.utilidad=utilidad_max-10000000
+                self.utilidad = utilidad_max-10000000
             else:
-                self.utilidad=utilidad_min+10000000
+                self.utilidad = utilidad_min+10000000
 
     def profundidadAcumulada(self):
         if (self.padre == None):
@@ -117,24 +118,24 @@ class Nodo:
         else:
             return self.profundidad + self.padre.profundidadAcumulada()
 
-    def aplicarBono(self,pos,_color):
+    def aplicarBono(self, pos, _color):
         colorear_izq = pos[1]-1
         colorear_der = pos[1]+1
         colorear_arr = pos[0]-1
         colorear_aba = pos[0]+1
-        #Validar izquierda
+        # Validar izquierda
         if colorear_izq >= 0:
             if self.entorno[pos[0]][colorear_izq] == 0:
-               self.entorno[pos[0]][colorear_izq]=_color
-        #Validar derecha
+                self.entorno[pos[0]][colorear_izq] = _color
+        # Validar derecha
         if colorear_der <= len(self.entorno[0])-1:
-             if self.entorno[pos[0]][colorear_der] == 0:
-                self.entorno[pos[0]][colorear_der]=_color
-        #Validar arriba
+            if self.entorno[pos[0]][colorear_der] == 0:
+                self.entorno[pos[0]][colorear_der] = _color
+        # Validar arriba
         if colorear_arr >= 0:
             if self.entorno[colorear_arr][pos[1]] == 0:
-               self.entorno[colorear_arr][pos[1]]=_color
-        #Validar abajo
+                self.entorno[colorear_arr][pos[1]] = _color
+        # Validar abajo
         if colorear_aba <= len(self.entorno) - 1:
-            if self.entorno[colorear_aba][pos[1]] ==0:
-               self.entorno[colorear_aba][pos[1]]=_color
+            if self.entorno[colorear_aba][pos[1]] == 0:
+                self.entorno[colorear_aba][pos[1]] = _color
