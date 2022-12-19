@@ -1,5 +1,5 @@
 import numpy as np
-
+import sys
 class Nodo:
     def __init__(self,entorno,tipo,utilidad=-1000000,profundidad=0,padre=None):
         self.entorno = entorno
@@ -7,6 +7,7 @@ class Nodo:
         self.profundidad = profundidad
         self.utilidad = utilidad
         self.padre = padre
+        sys.setrecursionlimit(2700)
 
     def posc(self):
         if (self.tipo == 1):

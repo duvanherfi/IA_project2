@@ -123,6 +123,7 @@ class Tablero(Ventana):
         self.jugadas_1 = []
         self.jugadas_2 = []
         self.pos_ant = 0
+        self.muestra = False
 
 
     def inicializar_imagenes(self):
@@ -195,10 +196,10 @@ class Tablero(Ventana):
                 self.grid = self.pasos[self.paso_actual]
 
     def jugadasj(self):
-        return np.count_nonzero(np.array(self.grid) == 4) + 1
+        return np.count_nonzero(np.array(self.grid_inicial) == 4) + 1
 
     def jugadasm(self):
-        return np.count_nonzero(np.array(self.grid) == 5) + 1
+        return np.count_nonzero(np.array(self.grid_inicial) == 5) + 1
 
     def ganador(self):
         if self.jugadasm() == self.jugadasj():
@@ -261,12 +262,14 @@ class Tablero(Ventana):
                 mov = list(filter(lambda x: (x[self.pos_mouse()] == 1), self.jugadas_2))
 
                 if len(mov) > 0:
+                    self.muestra = True
                     self.grid = mov[0]
                 else:
+                    self.muestra = False
                     self.grid = self.grid_inicial
 
         ##turnos
-        if self.turno == 1 and self.fin is False:
+        if self.turno == 1 and self.fin is False and self.muestra is False:
             _time = (time.time() - self.time_init)
             if _time <= 1.5:
                 return
@@ -287,7 +290,7 @@ class Tablero(Ventana):
                 self.paso_actual = len(self.pasos) - 1
             self.turno = 2
 
-        if self.turno == 2 and self.fin is False:
+        if self.turno == 2 and self.fin is False and self.muestra is False:
             nodo = Nodo(self.grid, 2)
             self.jugadas_2 = list(map(lambda x: x.entorno, Juego().crearArbol(nodo, 1, 1, [nodo])))
             if len(self.jugadas_2) == 1:
