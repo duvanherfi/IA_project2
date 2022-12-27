@@ -5,40 +5,40 @@ import sys
 class Juego:
 
     def minimax(self, arbol):
+        while (len(arbol) > 1):
+            profundidadNodos = [nodo.profundidadAcumulada() for nodo in arbol]
+            indexMaxProfundidadNodo = profundidadNodos.index(
+                max(profundidadNodos))
+            nodo_expandido = arbol.pop(indexMaxProfundidadNodo)
 
-        profundidadNodos = [nodo.profundidadAcumulada() for nodo in arbol]
-        indexMaxProfundidadNodo = profundidadNodos.index(max(profundidadNodos))
-        nodo_expandido = arbol.pop(indexMaxProfundidadNodo)
+            if nodo_expandido.padre.tipo == 1:
+                if nodo_expandido.utilidad > nodo_expandido.padre.utilidad:
+                    nodo_expandido.padre.utilidad = nodo_expandido.utilidad
+                    if nodo_expandido.profundidadAcumulada() == 1:
+                        nodo_expandido.padre.entorno = nodo_expandido.entorno
+            else:
+                if nodo_expandido.utilidad < nodo_expandido.padre.utilidad:
+                    nodo_expandido.padre.utilidad = nodo_expandido.utilidad
+                    if nodo_expandido.profundidadAcumulada() == 1:
+                        nodo_expandido.padre.entorno = nodo_expandido.entorno
 
-        if nodo_expandido.padre is None:
-            return nodo_expandido
-        if nodo_expandido.padre.tipo == 1:
-            if nodo_expandido.utilidad > nodo_expandido.padre.utilidad:
-                nodo_expandido.padre.utilidad = nodo_expandido.utilidad
-                if nodo_expandido.profundidadAcumulada() == 1:
-                    nodo_expandido.padre.entorno = nodo_expandido.entorno
-        else:
-            if nodo_expandido.utilidad < nodo_expandido.padre.utilidad:
-                nodo_expandido.padre.utilidad = nodo_expandido.utilidad
-                if nodo_expandido.profundidadAcumulada() == 1:
-                    nodo_expandido.padre.entorno = nodo_expandido.entorno
-        return self.minimax(arbol)
+        return arbol[0]
 
-    def crearArbol(self, nodo, limit_profundidad, index, movimientos):
-        _tipo = 0
-        _color = 0
-        # color = 5 -> verde, color=6->rojo
-        #max = verde, min=rojo
-        if nodo.tipo == 1:
-            _tipo = -1
-            _color = 5
-        else:
-            _tipo = 1
-            _color = 4
+    def crearArbol(self, limit_profundidad, movimientos):
+        index = 0
+        while (movimientos[index].profundidadAcumulada() < limit_profundidad):
+            nodo = movimientos[index]
+            _tipo = 0
+            _color = 0
+            # color = 5 -> verde, color=6->rojo
+            #max = verde, min=rojo
+            if nodo.tipo == 1:
+                _tipo = -1
+                _color = 5
+            else:
+                _tipo = 1
+                _color = 4
 
-        if (nodo.profundidadAcumulada() >= limit_profundidad):
-            return movimientos
-        else:
             upright = [nodo.posc()[0]-2, nodo.posc()[1]+1]
             hijos_creados = 0
             if upright[0] >= 0 and upright[1] <= len(nodo.entorno[0]) - 1:
@@ -142,4 +142,6 @@ class Juego:
             if index + 1 >= len(movimientos):
                 return movimientos
 
-            return self.crearArbol(movimientos[index+1], limit_profundidad, index+1, movimientos)
+            index += 1
+
+        return movimientos

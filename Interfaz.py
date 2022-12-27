@@ -286,7 +286,7 @@ class Tablero(Ventana):
         if self.turno == 2 and self.fin is False and self.muestra is False:
             nodo = Nodo(self.grid, 2)
             self.jugadas_2 = list(
-                map(lambda x: x.entorno, Juego().crearArbol(nodo, 1, 1, [nodo])))
+                map(lambda x: x.entorno, Juego().crearArbol(1, [nodo])))
             if len(self.jugadas_2) == 1:
                 self.turno = 1
             # print("jugadas 2")
@@ -300,8 +300,7 @@ class Tablero(Ventana):
                 return
             # print("turno 1")
             nodo = Nodo(self.grid, 1)
-            self.jugadas_1 = Juego().crearArbol(
-                nodo, self.profundidad, 0, [nodo])
+            self.jugadas_1 = Juego().crearArbol(self.profundidad, [nodo])
             # print("jugadas 1")
             # print(self.jugadas_1)
             # print(len(self.jugadas_1))
@@ -469,11 +468,3 @@ class Menu(Ventana):
 
 
 Menu().show_window()
-
-# ---------------------------------------------
-# grid = np.loadtxt('entorno.txt', dtype=int)
-# nodo = Nodo(grid,1)
-# jugadas=Juego().crearArbol(nodo,3,0,[nodo])
-# jugada=Juego().minimax(jugadas)
-# print(jugada.entorno)
-# Tablero(grid=jugada.entorno).show_window()
