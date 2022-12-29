@@ -98,7 +98,10 @@ class Nodo:
         utilidad_min = 0
         puntos_caballo1 = 0
         puntos_caballo2 = 0
-        if (self.profundidadAcumulada() == limit or hijo_hoja):
+
+        if (hijo_hoja):
+            self.utilidad = -50
+        elif (self.profundidadAcumulada() == limit or hijo_hoja):
             for i in range(len(self.entorno)):
                 for j in range(len(self.entorno[i])):
                     if (self.entorno[i][j] == 4):
