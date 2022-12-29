@@ -4,13 +4,12 @@ import sys
 
 class Juego:
 
-    def minimax(self, arbol):
-        while (len(arbol) > 1):
-            profundidadNodos = [nodo.profundidadAcumulada() for nodo in arbol]
-            indexMaxProfundidadNodo = profundidadNodos.index(
-                max(profundidadNodos))
-            nodo_expandido = arbol.pop(indexMaxProfundidadNodo)
+    def minimax(self, nodos, final=False):
+        for i in range(len(nodos)):
+            nodo_expandido = nodos[i]
 
+            if nodo_expandido.padre == None:
+                break
             if nodo_expandido.padre.tipo == 1:
                 if nodo_expandido.utilidad > nodo_expandido.padre.utilidad:
                     nodo_expandido.padre.utilidad = nodo_expandido.utilidad
@@ -22,7 +21,19 @@ class Juego:
                     if nodo_expandido.profundidadAcumulada() == 1:
                         nodo_expandido.padre.entorno = nodo_expandido.entorno
 
-        return arbol[0]
+        if (final):
+            return nodos[0]
+
+    def recorrerMinimax(self, arbol, limit_profundidad):
+        for i in range(limit_profundidad, -1, -1):
+            filtro_profundidad = filter(
+                lambda nodo: nodo.profundidadAcumulada() == i, arbol)
+            nodos = list(filtro_profundidad)
+
+            if i == 0:
+                return self.minimax(nodos, True)
+            else:
+                self.minimax(nodos)
 
     def crearArbol(self, limit_profundidad, movimientos):
         index = 0
@@ -39,8 +50,9 @@ class Juego:
                 _tipo = 1
                 _color = 4
 
+            cant_hijos_creados = 0
+
             upright = [nodo.posc()[0]-2, nodo.posc()[1]+1]
-            hijos_creados = 0
             if upright[0] >= 0 and upright[1] <= len(nodo.entorno[0]) - 1:
                 _pos = nodo.entorno[upright[0]][upright[1]]
                 if _pos == 0 or _pos == 3:
@@ -50,7 +62,7 @@ class Juego:
                         hijo.aplicarBono(upright, _color)
                     hijo.setUtilidad(limit_profundidad)
                     movimientos.append(hijo)
-                    hijos_creados += 1
+                    cant_hijos_creados += 1
 
             rightup = [nodo.posc()[0]-1, nodo.posc()[1]+2]
             if rightup[1] <= len(nodo.entorno[0]) - 1 and rightup[0] >= 0:
@@ -62,7 +74,7 @@ class Juego:
                         hijo.aplicarBono(rightup, _color)
                     hijo.setUtilidad(limit_profundidad)
                     movimientos.append(hijo)
-                    hijos_creados += 1
+                    cant_hijos_creados += 1
 
             rightdown = [nodo.posc()[0]+1, nodo.posc()[1]+2]
             if rightdown[1] <= len(nodo.entorno[0])-1 and rightdown[0] <= len(nodo.entorno) - 1:
@@ -74,7 +86,7 @@ class Juego:
                         hijo.aplicarBono(rightdown, _color)
                     hijo.setUtilidad(limit_profundidad)
                     movimientos.append(hijo)
-                    hijos_creados += 1
+                    cant_hijos_creados += 1
 
             downright = [nodo.posc()[0]+2, nodo.posc()[1]+1]
             if downright[0] <= len(nodo.entorno) - 1 and downright[1] <= len(nodo.entorno[0])-1:
@@ -86,7 +98,7 @@ class Juego:
                         hijo.aplicarBono(downright, _color)
                     hijo.setUtilidad(limit_profundidad)
                     movimientos.append(hijo)
-                    hijos_creados += 1
+                    cant_hijos_creados += 1
 
             downleft = [nodo.posc()[0]+2, nodo.posc()[1]-1]
             if downleft[0] <= len(nodo.entorno) - 1 and downleft[1] >= 0:
@@ -98,7 +110,7 @@ class Juego:
                         hijo.aplicarBono(downleft, _color)
                     hijo.setUtilidad(limit_profundidad)
                     movimientos.append(hijo)
-                    hijos_creados += 1
+                    cant_hijos_creados += 1
 
             leftdown = [nodo.posc()[0]+1, nodo.posc()[1]-2]
             if leftdown[1] >= 0 and leftdown[0] <= len(nodo.entorno) - 1:
@@ -110,7 +122,7 @@ class Juego:
                         hijo.aplicarBono(leftdown, _color)
                     hijo.setUtilidad(limit_profundidad)
                     movimientos.append(hijo)
-                    hijos_creados += 1
+                    cant_hijos_creados += 1
 
             leftup = [nodo.posc()[0]-1, nodo.posc()[1]-2]
             if leftup[1] >= 0 and leftup[0] >= 0:
@@ -122,7 +134,7 @@ class Juego:
                         hijo.aplicarBono(leftup, _color)
                     hijo.setUtilidad(limit_profundidad)
                     movimientos.append(hijo)
-                    hijos_creados += 1
+                    cant_hijos_creados += 1
 
             upleft = [nodo.posc()[0]-2, nodo.posc()[1]-1]
             if upleft[1] >= 0 and upleft[0] >= 0:
@@ -134,9 +146,9 @@ class Juego:
                         hijo.aplicarBono(upleft, _color)
                     hijo.setUtilidad(limit_profundidad)
                     movimientos.append(hijo)
-                    hijos_creados += 1
+                    cant_hijos_creados += 1
 
-            if hijos_creados == 0:
+            if cant_hijos_creados == 0:
                 nodo.setUtilidad(limit_profundidad, True)
 
             if index + 1 >= len(movimientos):

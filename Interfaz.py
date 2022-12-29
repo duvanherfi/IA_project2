@@ -308,7 +308,7 @@ class Tablero(Ventana):
                 self.pasos.append(self.grid)
                 # print(self.grid)
                 jugadas = list(np.copy(self.jugadas_1))
-                self.grid = Juego().minimax(jugadas).entorno
+                self.grid = Juego().recorrerMinimax(jugadas, self.profundidad).entorno
                 self.grid_inicial = self.grid
                 # print(self.grid)
                 self.pasos.append(self.grid)
