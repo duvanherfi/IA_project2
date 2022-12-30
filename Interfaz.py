@@ -1,11 +1,11 @@
 import pygame
 import numpy as np
 import random
-from recursion import recursion_depth
 from Juego import Juego
 from Nodo import Nodo
 import time
 import sys
+import gc
 
 
 class Cursor(pygame.Rect):
@@ -238,7 +238,7 @@ class Tablero(Ventana):
 
     def draw_ganador(self):
         self.pantalla.blit(
-            Fuente('Gabriola', 27, f"Ganador {self.ganador()}!!", (0, 60), [
+            Fuente('Gabriola', 27, f"{'Hay' if self.ganador() == 'Empate' else 'Ganador'} {self.ganador()}!!", (0, 60), [
                    self.AMARILLO]).render(),
             (0, 60)
         )
@@ -289,14 +289,13 @@ class Tablero(Ventana):
                 map(lambda x: x.entorno, Juego().crearArbol(1, [nodo])))
             if len(self.jugadas_2) == 1:
                 self.turno = 1
-            # print("jugadas 2")
-            # print(self.jugadas_2)
 
     def turno_maq(self):
         # turnos
         if self.turno == 1 and self.fin is False and self.muestra is False:
             _time = (time.time() - self.time_init)
-            if _time <= 1.5:
+            delay = 0.3 if len(self.jugadas_2) == 1 else 1.5
+            if _time <= delay:
                 return
             # print("turno 1")
             nodo = Nodo(self.grid, 1)
@@ -314,6 +313,7 @@ class Tablero(Ventana):
                 self.pasos.append(self.grid)
                 self.paso_actual = len(self.pasos) - 1
             self.turno = 2
+            self.time_init = time.time()
 
         # print(f"jugadas 1: {len(self.jugadas_1)}  and jugadas 2: {len(self.jugadas_2)}")
         if len(self.jugadas_1) == 1 and len(self.jugadas_2) == 1:
@@ -372,9 +372,13 @@ class Menu(Ventana):
                               (x - 3.5 * 10, y + 170))
         self.experto = Fuente('Gabriola', 34, "experto",
                               (x - 3.5 * 10, y + 240))
+        self.grid = None
+        self.chars = None
+        self.nivel = None
 
-    def iniciar_nivel(self, nivel):
-        grid = np.zeros([8, 8], dtype=int)
+    def iniciar_nivel(self):
+        random.seed(a=time.time(), version=2)
+        self.grid = np.zeros([8, 8], dtype=int)
         _range = range(0, 8)
         caballo1 = np.array(random.sample(_range, 2))
         caballo2 = np.empty([1])
@@ -392,21 +396,21 @@ class Menu(Ventana):
             bono3 = np.array(random.sample(_range, 2))
 
             if sum(np.absolute(bono - bono2)) > 1 and sum(np.absolute(bono2 - bono3)) > 1 and \
-                    np.array_equal(bono, caballo1) is False and \
+                sum(np.absolute(bono - bono3)) > 1 and np.array_equal(bono, caballo1) is False and \
                     np.array_equal(bono, caballo2) is False and \
                     np.array_equal(bono2, caballo1) is False and \
                     np.array_equal(bono2, caballo2) is False and \
                     np.array_equal(bono3, caballo1) is False and \
                     np.array_equal(bono3, caballo2) is False:
                 break
-        chars = [[caballo1, 1], [caballo2, 2],
+        self.chars = [[caballo1, 1], [caballo2, 2],
                  [bono, 3], [bono2, 3], [bono3, 3]]
-        for char in chars:
-            grid[char[0][0]][char[0][1]] = char[1]
+        for char in self.chars:
+            self.grid[char[0][0]][char[0][1]] = char[1]
+        #grid = np.loadtxt('entorno.txt', dtype=int)
+        gc.collect()
+        Tablero(grid=self.grid, nivel=self.nivel).show_window()
 
-        grid = np.loadtxt('entorno.txt', dtype=int)
-        with recursion_depth(1000000):
-            Tablero(grid=grid, nivel=nivel).show_window()
 
     def loop_events(self):
         for evento in pygame.event.get():
@@ -415,13 +419,16 @@ class Menu(Ventana):
             if evento.type == pygame.MOUSEBUTTONDOWN:
                 if evento.button == 1:
                     if self.cursor.colliderect(self.principiante.rect):
-                        self.iniciar_nivel(0)
+                        self.nivel = 0
+                        self.iniciar_nivel()
                         self.salir = True
                     if self.cursor.colliderect(self.amateur.rect):
-                        self.iniciar_nivel(1)
+                        self.nivel = 1
+                        self.iniciar_nivel()
                         self.salir = True
                     if self.cursor.colliderect(self.experto.rect):
-                        self.iniciar_nivel(2)
+                        self.nivel = 2
+                        self.iniciar_nivel()
                         self.salir = True
 
     def main_loop(self):
