@@ -345,9 +345,8 @@ class Tablero(Ventana):
             bono = np.array(random.sample(_range, 2))
             bono2 = np.array(random.sample(_range, 2))
             bono3 = np.array(random.sample(_range, 2))
-
-            if sum(np.absolute(bono - bono2)) > 1 and sum(np.absolute(bono2 - bono3)) > 1 and \
-                sum(np.absolute(bono - bono3)) > 1 and np.array_equal(bono, caballo1) is False and \
+            if sum(np.absolute(bono - bono2)) > 2 and sum(np.absolute(bono2 - bono3)) > 2 and \
+                sum(np.absolute(bono - bono3)) > 2 and np.array_equal(bono, caballo1) is False and \
                     np.array_equal(bono, caballo2) is False and \
                     np.array_equal(bono2, caballo1) is False and \
                     np.array_equal(bono2, caballo2) is False and \
