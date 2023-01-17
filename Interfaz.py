@@ -206,8 +206,7 @@ class Tablero(Ventana):
                    f"Jugadas maquina: {self.jugadasm()}", (x, y)),
             Fuente('Gabriola', 25,
                    f"Jugadas jugador: {self.jugadasj()}", (x + 280, y)),
-            Fuente('Gabriola', 25, "Turno " +
-                   ("Maquina" if self.turno == 1 else "Jugador"), (x, y + 30)),
+            Fuente('Gabriola', 25, "Turno", (x, y + 30)),
             Fuente('Gabriola', 25, ("Maquina" if self.turno ==
                    1 else "Jugador"), (x + 5*10, y + 30), [self.AMARILLO]),
         ]
