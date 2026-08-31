@@ -415,4 +415,5 @@ class Tablero(Ventana):
         pygame.display.flip()
 
 
-Tablero().show_window()
+if __name__ == "__main__":
+    Tablero().show_window()
