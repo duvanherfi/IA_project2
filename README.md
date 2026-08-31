@@ -1,14 +1,18 @@
-# IA_Project2
-Proyecto de inteligencia artificial, en el cuál se construye un árbol de juego
+# IA_project2
 
-# Instalar dependencias para ejecutar
-```
-    pip install -r requirements.txt
-```
-Importante cada vez que se instale y/o use una librería añadirla al archivo: **requirements.txt**
+Coursework — Artificial Intelligence, Universidad del Valle (2024).
 
-# Ejemplo interfaz
-```
-python ./interfaz.py
+Depth-limited **minimax** over a game tree with a heuristic utility function,
+playable through a pygame interface. The game tree is built up to a depth
+limit (`crearArbol`) and walked back up (`recorrerMinimax`) to pick the move,
+so the depth limit and the heuristic are what decide how well the machine
+plays.
+
+## Running it
+
+```bash
+pip install -r requirements.txt
+python Interfaz.py
 ```
 
+Any library you add belongs in `requirements.txt`.
